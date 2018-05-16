@@ -1,0 +1,2 @@
+# BlennyBackup
+Sync two folders
