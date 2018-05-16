@@ -1,0 +1,11 @@
+<PairConfig>
+    <DriveConfig>
+	<Letter>J</Letter>
+	<Label>data_1To</Label>
+	</DriveConfig>
+    <Pair>
+        <Source>J:\Projets\github\BlennyBackup\BlennyBackup</Source>
+        <Target>J:\Projets\github\backup\BlennyBackup</Target>
+	<Filter>*</Filter>
+    </Pair>
+</PairConfig>
