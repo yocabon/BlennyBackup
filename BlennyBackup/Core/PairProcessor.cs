@@ -81,6 +81,8 @@ namespace BlennyBackup.Core
                 }
                 catch (Exception) { }
 
+                k++;
+
                 ProgressReporter.Logger.WriteLine("Deleted " + path + " --- " + k + " / " + TargetOnlyDirectories.Length + " folders", LogLevel.File);
                 if (consoleTh == 0 || k % consoleTh == 0)
                 {
