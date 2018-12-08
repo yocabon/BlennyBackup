@@ -67,8 +67,8 @@ namespace BlennyBackup.Core
                 IgnoreList = IgnoreList.Append("blenny_backup_hash.txt").ToArray();
 
             // Get the list of all files in both source and target
-            string[] SourceFileList = Directory.GetFiles(SourcePath, FilterPattern, SearchOption.AllDirectories).Select(s => s.Replace(SourcePath, "")).Where(s => IgnoreList.All(w => !s.Contains(w))).ToArray();
-            string[] TargetFileList = Directory.GetFiles(TargetPath, FilterPattern, SearchOption.AllDirectories).Select(s => s.Replace(TargetPath, "")).Where(s => IgnoreList.All(w => !s.Contains(w))).ToArray();
+            string[] SourceFileList = Directory.GetFiles(SourcePath, FilterPattern, SearchOption.AllDirectories).Select(s => s.Replace("\\", "/").Replace(SourcePath, "")).Where(s => !IgnoreList.Any(w => s.Contains(w))).ToArray();
+            string[] TargetFileList = Directory.GetFiles(TargetPath, FilterPattern, SearchOption.AllDirectories).Select(s => s.Replace("\\", "/").Replace(TargetPath, "")).Where(s => !IgnoreList.Any(w => s.Contains(w))).ToArray();
 
             // Remove files from the other list in order to get new or removed files
             this.SourceOnlyFiles = SourceFileList.Except(TargetFileList).ToArray();
