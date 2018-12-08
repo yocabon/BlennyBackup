@@ -32,8 +32,8 @@ namespace BlennyBackup.Core
             ProgressReporter.Logger.WriteLine("Computing directory differences");
 
             // Remove folders first in order to try to gain some execution time
-            string[] SourceDirectoryList = Directory.GetDirectories(SourcePath, "*", SearchOption.AllDirectories).Select(s => s.Replace(SourcePath, "")).Where(s => IgnoreList.All(w => s.Contains(w))).ToArray();
-            string[] TargetDirectoryList = Directory.GetDirectories(TargetPath, "*", SearchOption.AllDirectories).Select(s => s.Replace(TargetPath, "")).Where(s => IgnoreList.All(w => s.Contains(w))).ToArray();
+            string[] SourceDirectoryList = Directory.GetDirectories(SourcePath, "*", SearchOption.AllDirectories).Select(s => s.Replace("\\", "/").Replace(SourcePath, "")).Where(s => IgnoreList.All(w => s.Contains(w))).ToArray();
+            string[] TargetDirectoryList = Directory.GetDirectories(TargetPath, "*", SearchOption.AllDirectories).Select(s => s.Replace("\\", "/").Replace(TargetPath, "")).Where(s => IgnoreList.All(w => s.Contains(w))).ToArray();
 
             DeleteSourceOnlyDirectories(TargetPath, reportCount, SourceDirectoryList, TargetDirectoryList);
 
