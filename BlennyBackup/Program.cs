@@ -32,11 +32,6 @@ namespace BlennyBackup
                 (XmlConfig opts) => SyncXmlPairs(opts),
                 (err => 1));
 
-            if (ProgressReporter.Logger != null)
-            {
-                ProgressReporter.Logger.Dispose();
-            }
-
             Console.Write("Press any key to continue...");
             Console.ReadKey(true);
             return returnCode;
@@ -52,6 +47,7 @@ namespace BlennyBackup
 
             PairProcessor.SyncPair(opts.SourcePath, opts.TargetPath, opts.FilterPattern, new string[0], opts.UseDate, opts.ReportCount);
 
+            ProgressReporter.Logger.Dispose();
             return 0;
         }
 
@@ -155,6 +151,8 @@ namespace BlennyBackup
                     PairProcessor.SyncPair(p.SourcePath, p.TargetPath, p.FilterPattern, p.IgnoreList, useDate, opts.ReportCount);
                 }
             }
+            ProgressReporter.Logger.Dispose();
+
             return 0;
         }
     }
