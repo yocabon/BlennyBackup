@@ -21,7 +21,7 @@ namespace BlennyBackup
 
         /// <summary>
         /// Run BlennyBackup.exe direct -d --source "D:/PathToSourceFolder/" --target "E:/PathToTargetFolder/" --pattern "*" --log "F:/PathToLogFile.txt" --report 100 --flush_delay 1000
-        /// Or  BlennyBackup.exe xml -d --path "D:/PathToXMLFile.xml" --log "F:/PathToLogFile --report 100 --flush_delay 1000
+        /// Or  BlennyBackup.exe xml --path "D:/PathToXMLFile.xml" --log "F:/PathToLogFile --report 100 --flush_delay 1000
         /// </summary>
         static int Main(string[] args)
         {
