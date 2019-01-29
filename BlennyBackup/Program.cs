@@ -1,12 +1,13 @@
-﻿using CommandLine;
-using BlennyBackup.Configuration;
+﻿using BlennyBackup.Configuration;
 using BlennyBackup.Core;
 using BlennyBackup.Diagnostics;
 using BlennyBackup.Logging;
 using BlennyBackup.Options;
+using CommandLine;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Xml.Serialization;
 
 namespace BlennyBackup
@@ -31,7 +32,10 @@ namespace BlennyBackup
                 (XmlConfig opts) => SyncXmlPairs(opts),
                 (err => 1));
 
-            ProgressReporter.Logger.Dispose();
+            if (ProgressReporter.Logger != null)
+            {
+                ProgressReporter.Logger.Dispose();
+            }
 
             Console.Write("Press any key to continue...");
             Console.ReadKey(true);
@@ -54,78 +58,103 @@ namespace BlennyBackup
         static int SyncXmlPairs(XmlConfig opts)
         {
             ProgressReporter.Logger = new Logger(opts.LogFilePath.Replace("\\", "/"), opts.FlushDelay);
-            opts.ConfigFilePath = opts.ConfigFilePath.Replace("\\", "/");
 
+            if (opts.ConfigFilePath == null || opts.ConfigFilePath.Count < 1)
+            {
+                return 1;
+            }
+
+            List<string> filepaths = opts.ConfigFilePath.ToList();
             PairConfig pairConfig;
 
-            var serializer = new XmlSerializer(typeof(PairConfig));
-            using (var xml = new FileStream(opts.ConfigFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            for (int k = 0; k < filepaths.Count; k++)
             {
-                pairConfig = (PairConfig)serializer.Deserialize(xml);
-            }
-
-            // Init pattern if it was missing in the xml config file
-            for (int i = 0; i < pairConfig.PairArray.Length; i++)
-            {
-                Pair p = pairConfig.PairArray[i];
-                if (p.FilterPattern == null || p.FilterPattern.Length == 0)
-                    p.FilterPattern = "*";
-                if (p.IgnoreList == null)
-                    p.IgnoreList = new string[0];
-                else
-                    for (int j = 0; j < p.IgnoreList.Length; j++)
-                        p.IgnoreList[j] = p.IgnoreList[j].Replace("\\", "/");
-            }
-
-            // List all drives in the system
-            Dictionary<string, char> DriveMapping = new Dictionary<string, char>();
-            Dictionary<char, string> OverrideDriveMapping = new Dictionary<char, string>();
-
-            foreach (var item in System.IO.DriveInfo.GetDrives())
-            {
-                // avoid crash when drives are disconnected
-                try
+                string cleanedFilepath = filepaths[k].Replace("\\", "/");
+                var serializer = new XmlSerializer(typeof(PairConfig));
+                using (var xml = new FileStream(cleanedFilepath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                 {
-                    DriveMapping.Add(item.VolumeLabel, item.Name[0]);
-                }
-                catch (Exception) { }
-            }
-
-            if (pairConfig.DriveConfigArray != null)
-            {
-                for (int i = 0; i < pairConfig.DriveConfigArray.Length; i++)
-                {
-                    if (pairConfig.DriveConfigArray[i].Letter == null || pairConfig.DriveConfigArray[i].Letter.Length != 1)
-                        throw new System.Exception("Invalid Drive Config letter");
-
-                    OverrideDriveMapping.TryAdd(pairConfig.DriveConfigArray[i].Letter[0], pairConfig.DriveConfigArray[i].Label);
-                }
-            }
-
-            ProgressReporter.Logger.WriteLine(pairConfig.PairArray.Length + " pairs to sync");
-            for (int i = 0; i < pairConfig.PairArray.Length; i++)
-            {
-                Pair p = pairConfig.PairArray[i];
-                p.SourcePath = p.SourcePath.Replace("\\", "/").TrimEnd('/') + "/";
-                p.TargetPath = p.TargetPath.Replace("\\", "/").TrimEnd('/') + "/";
-
-                // if drive letter in path corresponds to a DriveConfig in the xml file, use the letter assigned to the label instead
-                string sourceDrive = Path.GetPathRoot(p.SourcePath);
-                if (sourceDrive.Length > 0 && OverrideDriveMapping.ContainsKey(sourceDrive[0]))
-                {
-                    p.SourcePath = DriveMapping[OverrideDriveMapping[sourceDrive[0]]] + p.SourcePath.Substring(1);
+                    pairConfig = (PairConfig)serializer.Deserialize(xml);
                 }
 
-                string targetDrive = Path.GetPathRoot(p.TargetPath);
-                if (targetDrive.Length > 0 && OverrideDriveMapping.ContainsKey(targetDrive[0]))
+                // Init pattern if it was missing in the xml config file
+                for (int i = 0; i < pairConfig.PairArray.Length; i++)
                 {
-                    p.TargetPath = DriveMapping[OverrideDriveMapping[targetDrive[0]]] + p.TargetPath.Substring(1);
+                    Pair p = pairConfig.PairArray[i];
+                    if (p.FilterPattern == null || p.FilterPattern.Length == 0)
+                    {
+                        p.FilterPattern = "*";
+                    }
+
+                    if (p.IgnoreList == null)
+                    {
+                        p.IgnoreList = new string[0];
+                    }
+                    else
+                    {
+                        for (int j = 0; j < p.IgnoreList.Length; j++)
+                        {
+                            p.IgnoreList[j] = p.IgnoreList[j].Replace("\\", "/");
+                        }
+                    }
                 }
 
-                Directory.CreateDirectory(p.TargetPath);
-                PairProcessor.SyncPair(p.SourcePath, p.TargetPath, p.FilterPattern, p.IgnoreList, opts.UseDate, opts.ReportCount);
-            }
+                bool useDate = pairConfig.UseDate ?? false;
 
+                // List all drives in the system
+                Dictionary<string, char> DriveMapping = new Dictionary<string, char>();
+                Dictionary<char, string> OverrideDriveMapping = new Dictionary<char, string>();
+
+                foreach (var item in System.IO.DriveInfo.GetDrives())
+                {
+                    // avoid crash when drives are disconnected
+                    try
+                    {
+                        DriveMapping.Add(item.VolumeLabel, item.Name[0]);
+                    }
+                    catch (Exception) { }
+                }
+
+                if (pairConfig.DriveConfigArray != null)
+                {
+                    for (int i = 0; i < pairConfig.DriveConfigArray.Length; i++)
+                    {
+                        if (pairConfig.DriveConfigArray[i].Letter == null || pairConfig.DriveConfigArray[i].Letter.Length != 1)
+                        {
+                            throw new System.Exception("Invalid Drive Config letter");
+                        }
+
+                        OverrideDriveMapping.TryAdd(pairConfig.DriveConfigArray[i].Letter[0], pairConfig.DriveConfigArray[i].Label);
+                    }
+                }
+
+                if(k > 0)
+                {
+                    ProgressReporter.Logger.WriteLine(" ");
+                }
+                ProgressReporter.Logger.WriteLine(cleanedFilepath + ": " + pairConfig.PairArray.Length + " pairs to sync");
+                for (int i = 0; i < pairConfig.PairArray.Length; i++)
+                {
+                    Pair p = pairConfig.PairArray[i];
+                    p.SourcePath = p.SourcePath.Replace("\\", "/").TrimEnd('/') + "/";
+                    p.TargetPath = p.TargetPath.Replace("\\", "/").TrimEnd('/') + "/";
+
+                    // if drive letter in path corresponds to a DriveConfig in the xml file, use the letter assigned to the label instead
+                    string sourceDrive = Path.GetPathRoot(p.SourcePath);
+                    if (sourceDrive.Length > 0 && OverrideDriveMapping.ContainsKey(sourceDrive[0]))
+                    {
+                        p.SourcePath = DriveMapping[OverrideDriveMapping[sourceDrive[0]]] + p.SourcePath.Substring(1);
+                    }
+
+                    string targetDrive = Path.GetPathRoot(p.TargetPath);
+                    if (targetDrive.Length > 0 && OverrideDriveMapping.ContainsKey(targetDrive[0]))
+                    {
+                        p.TargetPath = DriveMapping[OverrideDriveMapping[targetDrive[0]]] + p.TargetPath.Substring(1);
+                    }
+
+                    Directory.CreateDirectory(p.TargetPath);
+                    PairProcessor.SyncPair(p.SourcePath, p.TargetPath, p.FilterPattern, p.IgnoreList, useDate, opts.ReportCount);
+                }
+            }
             return 0;
         }
     }

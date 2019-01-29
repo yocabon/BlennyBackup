@@ -9,6 +9,12 @@ namespace BlennyBackup.Configuration
     public class PairConfig
     {
         /// <summary>
+        /// Use Date ?
+        /// </summary>
+        [XmlElement(ElementName = "UseDate")]
+        public bool? UseDate { get; set; }
+
+        /// <summary>
         /// Array of <see cref="Pair"/>
         /// </summary>
         [XmlElement(ElementName = "Pair")]

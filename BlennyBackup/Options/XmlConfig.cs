@@ -1,4 +1,5 @@
 ﻿using CommandLine;
+using System.Collections.Generic;
 
 namespace BlennyBackup.Options
 {
@@ -12,19 +13,13 @@ namespace BlennyBackup.Options
         /// Path to the config file, must follow the <see cref="BlennyBackup.Configuration.DriveConfig"/> format
         /// </summary>
         [Option('p', "path", Required = true, HelpText = "Config File Path")]
-        public string ConfigFilePath { get; set; }
+        public IList<string> ConfigFilePath { get; set; }
 
         /// <summary>
         /// Path where the log file is written
         /// </summary>
         [Option('l', "log", Default = "log.txt", HelpText = "log file path")]
         public string LogFilePath { get; set; }
-
-        /// <summary>
-        /// Interval of time between two write to the log file
-        /// </summary>
-        [Option('d', "use_date", Default = false, HelpText = "Use date of modification instead of hash")]
-        public bool UseDate { get; set; }
 
         /// <summary>
         /// Number of reports output to the console per section of <see cref="BlennyBackup.Core.PairProcessor.SyncPair(string, string, string, int)"/>
