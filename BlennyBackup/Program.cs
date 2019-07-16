@@ -12,7 +12,7 @@ using System.Xml.Serialization;
 
 namespace BlennyBackup
 {
-    class Program
+    public class Program
     {
         /// <summary>
         /// MaxDegreeOfParallelism for IO tasks
@@ -23,7 +23,7 @@ namespace BlennyBackup
         /// Run BlennyBackup.exe direct -d --source "D:/PathToSourceFolder/" --target "E:/PathToTargetFolder/" --pattern "*" --log "F:/PathToLogFile.txt" --report 100 --flush_delay 1000
         /// Or  BlennyBackup.exe xml --path "D:/PathToXMLFile.xml" --log "F:/PathToLogFile --report 100 --flush_delay 1000
         /// </summary>
-        static int Main(string[] args)
+        private static int Main(string[] args)
         {
             int returnCode = Parser.Default
                 .ParseArguments<DirectPair, XmlConfig>(args)
@@ -37,7 +37,7 @@ namespace BlennyBackup
             return returnCode;
         }
 
-        static int SyncDirectPair(DirectPair opts)
+        public static int SyncDirectPair(DirectPair opts)
         {
             ProgressReporter.Logger = new Logger(opts.LogFilePath.Replace("\\", "/"), opts.FlushDelay);
 
@@ -45,13 +45,13 @@ namespace BlennyBackup
             opts.TargetPath = opts.TargetPath.Replace("\\", "/").TrimEnd('/') + "/";
             Directory.CreateDirectory(opts.TargetPath);
 
-            PairProcessor.SyncPair(opts.SourcePath, opts.TargetPath, opts.FilterPattern, new string[0], opts.UseDate, opts.ReportCount);
+            PairProcessor.SyncPair(opts.SourcePath, opts.TargetPath, opts.FilterPattern, new string[0], opts.ComparisonMode, opts.ReportCount);
 
             ProgressReporter.Logger.Dispose();
             return 0;
         }
 
-        static int SyncXmlPairs(XmlConfig opts)
+        public static int SyncXmlPairs(XmlConfig opts)
         {
             ProgressReporter.Logger = new Logger(opts.LogFilePath.Replace("\\", "/"), opts.FlushDelay);
 
@@ -94,7 +94,7 @@ namespace BlennyBackup
                     }
                 }
 
-                bool useDate = pairConfig.UseDate ?? false;
+                Options.ComparisonMode comparisonMode = pairConfig.ComparisonMode ?? Options.ComparisonMode.Date;
 
                 // List all drives in the system
                 Dictionary<string, char> DriveMapping = new Dictionary<string, char>();
@@ -148,7 +148,7 @@ namespace BlennyBackup
                     }
 
                     Directory.CreateDirectory(p.TargetPath);
-                    PairProcessor.SyncPair(p.SourcePath, p.TargetPath, p.FilterPattern, p.IgnoreList, useDate, opts.ReportCount);
+                    PairProcessor.SyncPair(p.SourcePath, p.TargetPath, p.FilterPattern, p.IgnoreList, comparisonMode, opts.ReportCount);
                 }
             }
             ProgressReporter.Logger.Dispose();

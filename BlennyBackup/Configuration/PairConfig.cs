@@ -9,10 +9,10 @@ namespace BlennyBackup.Configuration
     public class PairConfig
     {
         /// <summary>
-        /// Use Date ?
+        /// Technique used to compare files, defaults to Date
         /// </summary>
-        [XmlElement(ElementName = "UseDate")]
-        public bool? UseDate { get; set; }
+        [XmlElement(ElementName = "Mode")]
+        public BlennyBackup.Options.ComparisonMode? ComparisonMode { get; set; }
 
         /// <summary>
         /// Array of <see cref="Pair"/>

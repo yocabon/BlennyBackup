@@ -1,0 +1,8 @@
+<PairConfig xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Mode>Binary</Mode>
+  <Pair>
+    <Source>Resources/modified</Source>
+    <Target>C:\Users\ycabon\AppData\Local\Temp\BlennyBackupTest\backup</Target>
+    <Filter>*</Filter>
+  </Pair>
+</PairConfig>

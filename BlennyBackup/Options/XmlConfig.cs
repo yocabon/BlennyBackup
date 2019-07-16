@@ -7,7 +7,7 @@ namespace BlennyBackup.Options
     /// Retrieve the pair config from an XML file
     /// </summary>
     [Verb("xml", HelpText = "Process pair from command line")]
-    internal class XmlConfig
+    public class XmlConfig
     {
         /// <summary>
         /// Path to the config file, must follow the <see cref="BlennyBackup.Configuration.DriveConfig"/> format

@@ -6,7 +6,7 @@ namespace BlennyBackup.Options
     /// All in command line, do not support multiple pairs
     /// </summary>
     [Verb("direct", HelpText = "Process pair from command line")]
-    internal class DirectPair
+    public class DirectPair
     {
         /// <summary>
         /// Path to the source folder
@@ -35,8 +35,8 @@ namespace BlennyBackup.Options
         /// <summary>
         /// Interval of time between two write to the log file
         /// </summary>
-        [Option('d', "use_date", Default = false, HelpText = "Use date of modification instead of hash")]
-        public bool UseDate { get; set; }
+        [Option('m', "mode", Default = ComparisonMode.Date, HelpText = "Comparison Mode. Default is to LastWriteTime of file")]
+        public ComparisonMode ComparisonMode { get; set; }
 
         /// <summary>
         /// Number of reports output to the console per section of <see cref="BlennyBackup.Core.PairProcessor.SyncPair(string, string, string, int)"/>
@@ -45,7 +45,7 @@ namespace BlennyBackup.Options
         public int ReportCount { get; set; }
 
         /// <summary>
-        /// Interval of time between two write to the log file
+        /// Interval of time in ms between two write to the log file
         /// </summary>
         [Option('f', "flush_delay", Default = 1000, HelpText = "logger flush routine delay")]
         public int FlushDelay { get; set; }

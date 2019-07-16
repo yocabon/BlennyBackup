@@ -1,4 +1,5 @@
 <PairConfig>
+    <Mode>Date</Mode>
     <DriveConfig>
 	<Letter>J</Letter>
 	<Label>data_1To</Label>

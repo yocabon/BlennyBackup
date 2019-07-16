@@ -16,30 +16,46 @@ namespace BlennyBackup.Core
         /// <summary>
         /// Sync a source folder with a target folder (backup)
         /// </summary>
-        /// <param name="SourcePath">Path to the source folder</param>
-        /// <param name="TargetPath">Path to the target folder</param>
-        /// <param name="FilterPattern">Filter pattern for GetFiles</param>
-        /// <param name="IgnoreList">Files or folders to ignore</param>
+        /// <param name="sourcePath">Path to the source folder</param>
+        /// <param name="targetPath">Path to the target folder</param>
+        /// <param name="filterPattern">Filter pattern for GetFiles</param>
+        /// <param name="ignoreList">Files or folders to ignore</param>
         /// <param name="UseDate">Use last date of modification instead of hash</param>
         /// <param name="reportCount">Number of reports output to the console per section</param>
-        public static void SyncPair(string SourcePath, string TargetPath, string FilterPattern, string[] IgnoreList, bool UseDate, int reportCount = 100)
+        public static void SyncPair(string sourcePath, string targetPath, string filterPattern, string[] ignoreList, Options.ComparisonMode comparisonMode, int reportCount = 100)
         {
-            if (SourcePath.Contains(TargetPath) || TargetPath.Contains(SourcePath))
+            if (sourcePath.Contains(targetPath) || targetPath.Contains(sourcePath))
                 throw new System.Exception("Paths between source and target MUST BE COMPLETELY DIFFERENT");
 
-            ProgressReporter.Logger.WriteLine("Starting syncing of pair " + SourcePath + " ---- " + TargetPath);
+            ProgressReporter.Logger.WriteLine("Starting syncing of pair " + sourcePath + " ---- " + targetPath);
 
             ProgressReporter.Logger.WriteLine("Computing directory differences");
 
             // Remove folders first in order to try to gain some execution time
-            string[] TargetDirectoryList = Directory.GetDirectories(TargetPath, "*", SearchOption.AllDirectories).Select(s => s.Replace("\\", "/").Replace(TargetPath, "")).Where(s => !IgnoreList.Any(w => s.Contains(w))).ToArray();
-            string[] SourceDirectoryList = Directory.GetDirectories(SourcePath, "*", SearchOption.AllDirectories).Select(s => s.Replace("\\", "/").Replace(SourcePath, "")).Where(s => !IgnoreList.Any(w => s.Contains(w))).ToArray();
+            string[] TargetDirectoryList = Directory.GetDirectories(targetPath, "*", SearchOption.AllDirectories).Select(s => s.Replace("\\", "/").Replace(targetPath, "")).Where(s => !ignoreList.Any(w => s.Contains(w))).ToArray();
+            string[] SourceDirectoryList = Directory.GetDirectories(sourcePath, "*", SearchOption.AllDirectories).Select(s => s.Replace("\\", "/").Replace(sourcePath, "")).Where(s => !ignoreList.Any(w => s.Contains(w))).ToArray();
 
-            DeleteSourceOnlyDirectories(TargetPath, reportCount, SourceDirectoryList, TargetDirectoryList);
+            DeleteSourceOnlyDirectories(targetPath, reportCount, SourceDirectoryList, TargetDirectoryList);
 
             ProgressReporter.Logger.WriteLine("Computing file differences");
-            FolderDiff folderDiff = new FolderDiff(SourcePath, TargetPath, FilterPattern, IgnoreList, UseDate, reportCount);
+            FolderDiffBase folderDiff;
+            
+            switch(comparisonMode)
+            {
+                case Options.ComparisonMode.Date:
+                    folderDiff = new FolderDiffDate(sourcePath, targetPath, filterPattern, ignoreList);
+                    break;
+                case Options.ComparisonMode.Binary:
+                    folderDiff = new FolderDiffBinary(sourcePath, targetPath, filterPattern, ignoreList);
+                    break;
+                case Options.ComparisonMode.Hash:
+                    folderDiff = new FolderDiffHash(sourcePath, targetPath, filterPattern, ignoreList);
+                    break;
+                default:
+                    throw new Exception("ComparisonMode " + comparisonMode.ToString() + " is not supported");
+            }
 
+            folderDiff.ComputeModifiedFilesList(reportCount);
             int errorCount = DeleteSourceOnlyFiles(folderDiff, reportCount);
 
             ProgressReporter progressReporter = new ProgressReporter(folderDiff);
@@ -47,21 +63,14 @@ namespace BlennyBackup.Core
             errorCount += AddSourceOnlyFiles(folderDiff, progressReporter, reportCount);
             errorCount += OverwriteModifiedFiles(folderDiff, progressReporter, reportCount);
 
-            if (!UseDate)
-            {
-                string backupHashPath = Path.Combine(TargetPath, "blenny_backup_hash.txt");
-                FileStream f = File.Create(backupHashPath);
-                f.Close();
+            folderDiff.Dispose();
 
-                File.WriteAllLines(backupHashPath, folderDiff.CommonFilesSourceHash);
-            }
-
-            ProgressReporter.Logger.WriteLine("Syncing of pair " + SourcePath + " ---- " + TargetPath + " ---- Ended with " + errorCount + " errors");
+            ProgressReporter.Logger.WriteLine("Syncing of pair " + sourcePath + " ---- " + targetPath + " ---- Ended with " + errorCount + " errors");
         }
 
-        private static void DeleteSourceOnlyDirectories(string TargetPath, int reportCount, string[] SourceDirectoryList, string[] TargetDirectoryList)
+        private static void DeleteSourceOnlyDirectories(string targetPath, int reportCount, string[] sourceDirectoryList, string[] targetDirectoryList)
         {
-            string[] TargetOnlyDirectories = TargetDirectoryList.Except(SourceDirectoryList).ToArray();
+            string[] TargetOnlyDirectories = targetDirectoryList.Except(sourceDirectoryList).ToArray();
 
             // Remove target only folders
             ProgressReporter.Logger.WriteLine(TargetOnlyDirectories.Length + " folders will be removed");
@@ -71,9 +80,10 @@ namespace BlennyBackup.Core
 
             foreach (string folder in TargetOnlyDirectories)
             {
-                string path = Path.Combine(TargetPath, folder);
+                string path = Path.Combine(targetPath, folder);
 
                 // Safeguard against directory recursive deleting
+                // read https://stackoverflow.com/questions/265953/how-can-you-easily-check-if-access-is-denied-for-a-file-in-net
                 try
                 {
                     if (Directory.Exists(path))
@@ -90,7 +100,8 @@ namespace BlennyBackup.Core
                 }
             }
         }
-        private static int DeleteSourceOnlyFiles(FolderDiff folderDiff, int reportCount)
+
+        private static int DeleteSourceOnlyFiles(FolderDiffBase folderDiff, int reportCount)
         {
             // Remove target only files
             ProgressReporter.Logger.WriteLine(folderDiff.TargetOnlyFiles.Length + " files will be removed");
@@ -103,6 +114,7 @@ namespace BlennyBackup.Core
             {
                 string path = Path.Combine(folderDiff.TargetPath, folderDiff.TargetOnlyFiles[i]);
 
+                // read https://stackoverflow.com/questions/265953/how-can-you-easily-check-if-access-is-denied-for-a-file-in-net
                 try
                 {
                     File.Delete(path);
@@ -123,7 +135,7 @@ namespace BlennyBackup.Core
             return errorCount;
         }
 
-        private static int AddSourceOnlyFiles(FolderDiff folderDiff, ProgressReporter progressReporter, int reportCount)
+        private static int AddSourceOnlyFiles(FolderDiffBase folderDiff, ProgressReporter progressReporter, int reportCount)
         {
             // Add source only files to target
             ProgressReporter.Logger.WriteLine("Copying " + folderDiff.SourceOnlyFiles.Length + " new files");
@@ -137,6 +149,7 @@ namespace BlennyBackup.Core
                 string sourcePath = Path.Combine(folderDiff.SourcePath, folderDiff.SourceOnlyFiles[i]);
                 string targetPath = Path.Combine(folderDiff.TargetPath, folderDiff.SourceOnlyFiles[i]);
 
+                // read https://stackoverflow.com/questions/265953/how-can-you-easily-check-if-access-is-denied-for-a-file-in-net
                 try
                 {
                     Directory.CreateDirectory(Path.GetDirectoryName(targetPath));
@@ -160,7 +173,7 @@ namespace BlennyBackup.Core
             return errorCount;
         }
 
-        private static int OverwriteModifiedFiles(FolderDiff folderDiff, ProgressReporter progressReporter, int reportCount)
+        private static int OverwriteModifiedFiles(FolderDiffBase folderDiff, ProgressReporter progressReporter, int reportCount)
         {
             // Replace target files that have been edited in source with their new version
             ProgressReporter.Logger.WriteLine("Overwritting " + folderDiff.ModifiedFiles.Length + " modified files");
@@ -174,6 +187,7 @@ namespace BlennyBackup.Core
                 string sourcePath = Path.Combine(folderDiff.SourcePath, folderDiff.ModifiedFiles[i]);
                 string targetPath = Path.Combine(folderDiff.TargetPath, folderDiff.ModifiedFiles[i]);
 
+                // read https://stackoverflow.com/questions/265953/how-can-you-easily-check-if-access-is-denied-for-a-file-in-net
                 try
                 {
                     File.Copy(sourcePath, targetPath, true);

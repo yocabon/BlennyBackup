@@ -1,0 +1,24 @@
+<PairConfig xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Mode>Hash</Mode>
+  <DriveConfig>
+    <Letter>F</Letter>
+    <Label>Data</Label>
+  </DriveConfig>
+  <DriveConfig>
+    <Letter>G</Letter>
+    <Label>Backup</Label>
+  </DriveConfig>
+  <Pair>
+    <Source>F:\Resources\modified</Source>
+    <Target>G:\BlennyBackupTest\backup</Target>
+    <Filter>*</Filter>
+    <Ignore>folder_c/constant.txt</Ignore>
+    <Ignore>directory_b/original_2.txt</Ignore>
+  </Pair>
+  <Pair>
+    <Source>F:\Resources\dancing</Source>
+    <Target>G:\BlennyBackupTest\dancing</Target>
+    <Filter>*</Filter>
+  </Pair>
+
+</PairConfig>

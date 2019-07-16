@@ -60,12 +60,12 @@ namespace BlennyBackup.Diagnostics
         }
 
         /// <summary>
-        /// Per file size of <see cref="FolderDiff.SourceOnlyFiles"/>
+        /// Per file size of <see cref="FolderDiffBase.SourceOnlyFiles"/>
         /// </summary>
         private long[] NewFilesSizeArray;
 
         /// <summary>
-        /// Per file size of <see cref="FolderDiff.ModifiedFiles"/>
+        /// Per file size of <see cref="FolderDiffBase.ModifiedFiles"/>
         /// </summary>
         private long[] ModifiedFilesSizeArray;
 
@@ -86,10 +86,10 @@ namespace BlennyBackup.Diagnostics
         }
 
         /// <summary>
-        /// Compute file sizes from a <see cref="FolderDiff"/> elements in order to have relevant reports
+        /// Compute file sizes from a <see cref="FolderDiffBase"/> elements in order to have relevant reports
         /// </summary>
         /// <param name="folderDiff">An object containing source/target differences</param>
-        public ProgressReporter(FolderDiff folderDiff)
+        public ProgressReporter(FolderDiffBase folderDiff)
         {
             NewFilesProgress = 0;
             ModifiedFilesProgress = 0;
