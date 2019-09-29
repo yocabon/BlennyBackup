@@ -75,7 +75,7 @@ namespace BlennyBackup.Core
             if (sourceInfo.Length != targetInfo.Length)
                 return false;
 
-            int iterations = (int)Math.Ceiling((double)sourceInfo.Length / BytesToRead);
+            ulong iterations = (ulong)Math.Ceiling((double)sourceInfo.Length / BytesToRead);
 
             using (FileStream fs_source = sourceInfo.OpenRead())
             using (FileStream fs_target = targetInfo.OpenRead())
@@ -83,7 +83,7 @@ namespace BlennyBackup.Core
                 byte[] sourceByte = new byte[BytesToRead];
                 byte[] targetByte = new byte[BytesToRead];
 
-                for (int i = 0; i < iterations; i++)
+                for (ulong i = 0; i < iterations; i++)
                 {
                     fs_source.Read(sourceByte, 0, BytesToRead);
                     fs_target.Read(targetByte, 0, BytesToRead);
