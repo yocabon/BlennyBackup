@@ -45,7 +45,7 @@ namespace BlennyBackup
             opts.TargetPath = opts.TargetPath.Replace("\\", "/").TrimEnd('/') + "/";
             Directory.CreateDirectory(opts.TargetPath);
 
-            PairProcessor.SyncPair(opts.SourcePath, opts.TargetPath, opts.FilterPattern, new string[0], opts.ComparisonMode, opts.ReportCount);
+            PairProcessor.SyncPair(opts.SourcePath, opts.TargetPath, opts.FilterPattern, new string[0], opts.ComparisonMode, opts.ReportCount, opts.TimeResolution);
 
             ProgressReporter.Logger.Dispose();
             return 0;
@@ -148,7 +148,7 @@ namespace BlennyBackup
                     }
 
                     Directory.CreateDirectory(p.TargetPath);
-                    PairProcessor.SyncPair(p.SourcePath, p.TargetPath, p.FilterPattern, p.IgnoreList, comparisonMode, opts.ReportCount);
+                    PairProcessor.SyncPair(p.SourcePath, p.TargetPath, p.FilterPattern, p.IgnoreList, comparisonMode, opts.ReportCount, opts.TimeResolution);
                 }
             }
             ProgressReporter.Logger.Dispose();

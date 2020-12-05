@@ -86,7 +86,7 @@ namespace BlennyBackupTest
             Assert.IsFalse(File.Exists(Path.Combine(targetPath, "folder_a/donotbackupthis.txt")));
 
             string text = File.ReadAllText(Path.Combine(targetPath, "directory_b/original.txt"));
-            Assert.AreEqual("I ate an monkey.", text);
+            Assert.AreEqual("I ate a monkey.", text);
 
             string text2 = File.ReadAllText(Path.Combine(targetPath, "directory_b/original_2.txt"));
             Assert.AreEqual("I ate an elephant.", text2);

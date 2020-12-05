@@ -22,7 +22,7 @@ namespace BlennyBackup.Core
         /// <param name="ignoreList">Files or folders to ignore</param>
         /// <param name="UseDate">Use last date of modification instead of hash</param>
         /// <param name="reportCount">Number of reports output to the console per section</param>
-        public static void SyncPair(string sourcePath, string targetPath, string filterPattern, string[] ignoreList, Options.ComparisonMode comparisonMode, int reportCount = 100)
+        public static void SyncPair(string sourcePath, string targetPath, string filterPattern, string[] ignoreList, Options.ComparisonMode comparisonMode, int reportCount = 100, float timeResolution = 0f)
         {
             if (sourcePath.Contains(targetPath) || targetPath.Contains(sourcePath))
                 throw new System.Exception("Paths between source and target MUST BE COMPLETELY DIFFERENT");
@@ -43,7 +43,7 @@ namespace BlennyBackup.Core
             switch(comparisonMode)
             {
                 case Options.ComparisonMode.Date:
-                    folderDiff = new FolderDiffDate(sourcePath, targetPath, filterPattern, ignoreList);
+                    folderDiff = new FolderDiffDate(sourcePath, targetPath, filterPattern, ignoreList, timeResolution);
                     break;
                 case Options.ComparisonMode.Binary:
                     folderDiff = new FolderDiffBinary(sourcePath, targetPath, filterPattern, ignoreList);

@@ -49,5 +49,11 @@ namespace BlennyBackup.Options
         /// </summary>
         [Option('f', "flush_delay", Default = 1000, HelpText = "logger flush routine delay")]
         public int FlushDelay { get; set; }
+
+        /// <summary>
+        /// Time resolution for Date comparison type in ms"/>
+        /// </summary>
+        [Option("time_res", Default = 0f, HelpText = "Time resolution for Date comparison type in ms")]
+        public float TimeResolution { get; set; }
     }
 }
