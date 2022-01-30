@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Data.HashFunction.xxHash;
-using System.Linq;
 using System.IO;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
@@ -35,7 +31,7 @@ namespace BlennyBackup.Core
             int k = 0;
             int consoleTh = CommonFiles.Length / reportCount;
 
-            Parallel.For(0, CommonFiles.Length, i =>
+            for(int i = 0; i< CommonFiles.Length; i++)
             {
                 bool areEqual = false;
 
@@ -61,7 +57,7 @@ namespace BlennyBackup.Core
 
                 if (!areEqual)
                     modifiedFiles.Push(CommonFiles[i]);
-            });
+            }
 
             ModifiedFiles = modifiedFiles.ToArray();
         }
